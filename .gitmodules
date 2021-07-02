@@ -1,0 +1,6 @@
+[submodule "deps/asio"]
+	path = deps/asio
+	url = git@github.com:klemens-morgenstern/asio.git
+[submodule "deps/ctre"]
+	path = deps/ctre
+	url = https://github.com/hanickadot/compile-time-regular-expressions.git
