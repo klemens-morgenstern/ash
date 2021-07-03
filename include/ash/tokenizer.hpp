@@ -25,8 +25,7 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 namespace ash
 {
 
-//constexpr auto line_matcher = ctre::starts_with<R"rx(^((?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|#.*\n|\\.*\n|[^\n])*)(?:;|\n|$))rx">;
-constexpr auto line_matcher = ctre::starts_with<R"rx(\s*((?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|#[^\n]*\n|\\[^\n]*\n|[^;\n])*)(?:;|\n|$))rx">;
+constexpr auto line_matcher = ctre::starts_with<R"rx(\s*((?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|#[^\n]*\n|\\[^\n]*\n|[^;\n])*)(?:;|\n))rx">;
 
 constexpr std::pair<std::string_view, std::string_view> pick_line(std::string_view raw)
 {
@@ -39,10 +38,27 @@ constexpr std::pair<std::string_view, std::string_view> pick_line(std::string_vi
 
 constexpr auto tokenizer = ctre::tokenize<R"rx("((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|#([^\n]*)\n|(\\)|(;)|(\n)|([^\s"']+)|(\s+))rx">;
 
-inline std::pair<std::vector<std::string_view>, std::string_view> tokenize(std::string_view raw, bool skip_ws = true)
+struct tokenized_view
 {
+    std::string_view raw_input;
+    std::vector<std::string_view> tokens;
+};
+
+inline std::pair<tokenized_view, std::string_view> tokenize(std::string_view raw, bool skip_ws = true)
+{
+    /*
+     regexes:
+        double quoted string: "((?:[^"\\]|\\.)*)"
+        single quoted string: '(?:[^'\\]|\\.)*'
+        comment: #([^\n])*
+        line extension: (\\)
+        semi-colon: ';'
+        line-break: \n
+        regular token: ([^\s"']+)
+        whitespace: (\s+)
+     */
     std::size_t offset{0u};
-    std::vector<std::string_view> res;
+    tokenized_view res;
     for (auto tk : tokenizer(raw))
     {
         auto & [full, double_quoted, single_quoted, comment, line_extension, semi_colon, line_break, regular, whitespace] = tk;
@@ -51,20 +67,17 @@ inline std::pair<std::vector<std::string_view>, std::string_view> tokenize(std::
         if (skip_ws && (comment || line_extension || semi_colon || line_break || whitespace))
             continue;
 
-        if(double_quoted) res.push_back(double_quoted.view());
-        else if(single_quoted) res.push_back(single_quoted.view());
-        else if(comment) res.push_back(comment.view());
-        else if(line_extension) res.push_back(line_extension.view());
-        else if(semi_colon) res.push_back(semi_colon.view());
-        else if(line_break) res.push_back(line_break.view());
-        else if(regular) res.push_back(regular.view());
-        else if(whitespace) res.push_back(whitespace.view());
+        if(double_quoted) res.tokens.push_back(double_quoted.view());
+        else if(single_quoted) res.tokens.push_back(single_quoted.view());
+        else if(comment) res.tokens.push_back(comment.view());
+        else if(line_extension) res.tokens.push_back(line_extension.view());
+        else if(semi_colon) res.tokens.push_back(semi_colon.view());
+        else if(line_break) res.tokens.push_back(line_break.view());
+        else if(regular) res.tokens.push_back(regular.view());
+        else if(whitespace) res.tokens.push_back(whitespace.view());
     }
-
+    res.raw_input =  raw.substr(0, offset);
     return {res, raw.substr(offset)};
-
-
-
 }
 
 }

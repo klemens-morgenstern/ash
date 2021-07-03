@@ -3,8 +3,11 @@
 
 #if defined(BOOST_CAMPBELL)
 #include <boost/asio.hpp>
+#include <boost/asio/experimental/coro.hpp>
+
 #else
 #include <asio.hpp>
+#include <asio/experimental/coro.hpp>
 #endif
 
 namespace ash

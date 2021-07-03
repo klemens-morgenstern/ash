@@ -46,38 +46,37 @@ TEST_CASE("tokenizer")
     auto [tks, rest] = ash::tokenize(R"(# Some comment
 set x 42)");
 
-    CHECK(tks == std::vector<std::string_view>{"set", "x", "42"});
+    CHECK(tks.tokens == std::vector<std::string_view>{"set", "x", "42"});
     CHECK(rest == "");
 
     tie(tks, rest) = ash::tokenize("foo 12");
-    CHECK(tks == std::vector<std::string_view>{"foo", "12"});
+    CHECK(tks.tokens == std::vector<std::string_view>{"foo", "12"});
     CHECK(rest == "");
 
     tie(tks, rest) = ash::tokenize(R"(line breaker \
 broken)");
-    CHECK(tks == std::vector<std::string_view>{"line", "breaker", "broken"});
+    CHECK(tks.tokens == std::vector<std::string_view>{"line", "breaker", "broken"});
     CHECK(rest == "");
 
     tie(tks, rest) = ash::tokenize(R"(read-json '
 {
     "foo" : "bar"
 } ')");
-    REQUIRE(tks.size() == 2);
-    CHECK(tks[0] == "read-json");
-    CHECK(tks[1] == R"(
+    REQUIRE(tks.tokens.size() == 2);
+    CHECK(tks.tokens[0] == "read-json");
+    CHECK(tks.tokens[1] == R"(
 {
     "foo" : "bar"
-}   )");
+} )");
 
     CHECK(rest == "");
 
     tie(tks, rest) = ash::tokenize(R"(foo bar)");
-    CHECK(tks == std::vector<std::string_view>{"foo", "bar"});
+    CHECK(tks.tokens == std::vector<std::string_view>{"foo", "bar"});
     CHECK(rest == "");
 
 
     tie(tks, rest) = ash::tokenize(R"(asd )");
-    CHECK(tks == std::vector<std::string_view>{"asd"});
+    CHECK(tks.tokens == std::vector<std::string_view>{"asd"});
     CHECK(rest == "");
-
 }
